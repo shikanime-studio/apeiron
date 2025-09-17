@@ -24,7 +24,6 @@ from apeiron.tools.discord.utils import (
 logger = logging.getLogger(__name__)
 
 
-
 class Response(BaseModel):
     """Response format for agent interactions."""
 
@@ -50,6 +49,7 @@ class Response(BaseModel):
         description="Whether to send the message without triggering notifications",
     )
 
+
 def create_bot():
     # Initialize the MistralAI model
     chat_model = create_chat_model(
@@ -62,7 +62,9 @@ def create_bot():
     # Initialize the Discord client
     bot = AutoShardedBot(intents=Intents.all())
     tools = DiscordToolkit(client=bot).get_tools()
-    graph = create_agent(tools=tools, model=chat_model, store=store, response_format=Response)
+    graph = create_agent(
+        tools=tools, model=chat_model, store=store, response_format=Response
+    )
 
     @bot.listen
     async def on_message(message: Message):
