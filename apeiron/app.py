@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from langchain_core.runnables import RunnableConfig
 
 import apeiron.logging
-from apeiron.agents.operator_6o import create_agent
+from apeiron.agents.operator_6o import create_agent, Response
 from apeiron.chat_models import create_chat_model
 from apeiron.store import create_store
 from apeiron.toolkits.discord.toolkit import DiscordToolkit
