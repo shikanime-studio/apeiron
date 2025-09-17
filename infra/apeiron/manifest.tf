@@ -1,6 +1,6 @@
 resource "kubernetes_namespace" "infinity_horizons" {
   metadata {
-    name = "infinity-horizons"
+    name = "shikanime-studio"
   }
 }
 
