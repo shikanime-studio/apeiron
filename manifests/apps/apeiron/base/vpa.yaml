@@ -2,7 +2,7 @@ apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
   name: apeiron
-  namespace: infinity-horizons
+  namespace: shikanime-studio
 spec:
   targetRef:
     apiVersion: apps/v1
