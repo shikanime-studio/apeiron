@@ -7,22 +7,51 @@ from discord import AutoShardedBot, Client, Intents, Message
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from langchain_core.runnables import RunnableConfig
+from langchain_core.messages import trim_messages
+from pydantic import BaseModel, Field
 
 import apeiron.logging
-from apeiron.agents.operator_6o import create_agent, Response
+from apeiron.chat_message_histories.discord import DiscordChannelChatMessageHistory
+from apeiron.agents.operator_6o import create_agent
 from apeiron.chat_models import create_chat_model
 from apeiron.store import create_store
 from apeiron.toolkits.discord.toolkit import DiscordToolkit
 from apeiron.tools.discord.utils import (
-    create_chat_message,
     create_configurable,
     is_bot_mentioned,
     is_bot_message,
     is_private_channel,
 )
+from apeiron.messages.utils import trim_messages_images
 
 logger = logging.getLogger(__name__)
 
+
+
+class Response(BaseModel):
+    """Response format for agent interactions."""
+
+    content: str | None = Field(
+        None,
+        description="Content of the message to send or reply",
+        min_length=1,
+        max_length=2000,
+    )
+    tts: bool | None = Field(
+        None, description="Whether to send as text-to-speech message"
+    )
+    embeds: list[dict] | None = Field(None, description="List of embed dictionaries")
+    stickers: list[int] | None = Field(None, description="List of sticker IDs to send")
+    suppress_embeds: bool | None = Field(
+        None, description="Whether to suppress embeds in this message"
+    )
+    allowed_mentions: dict | None = Field(
+        None, description="Controls which mentions are allowed in the message"
+    )
+    silent: bool | None = Field(
+        None,
+        description="Whether to send the message without triggering notifications",
+    )
 
 def create_bot():
     # Initialize the MistralAI model
@@ -36,7 +65,7 @@ def create_bot():
     # Initialize the Discord client
     bot = AutoShardedBot(intents=Intents.all())
     tools = DiscordToolkit(client=bot).get_tools()
-    graph = create_agent(tools=tools, model=chat_model, store=store)
+    graph = create_agent(tools=tools, model=chat_model, store=store, response_format=Response)
 
     @bot.listen
     async def on_message(message: Message):
@@ -48,6 +77,19 @@ def create_bot():
             return
 
         try:
+            chat_history = DiscordChannelChatMessageHistory(bot)
+            await chat_history.load_messages_from_message(message)
+            inputs = {
+                "messages": trim_messages(
+                    trim_messages_images(chat_history.messages, max_images=1),
+                    token_counter=model,
+                    strategy="last",
+                    max_tokens=2000,
+                    start_on="human",
+                    end_on=("human", "tool"),
+                    include_system=True,
+                )
+            }
             config: RunnableConfig = {
                 "configurable": create_configurable(message),
             }
@@ -55,11 +97,19 @@ def create_bot():
                 config["configurable"]["guild_id"] = message.guild.id
             async with message.channel.typing():
                 result = await graph.ainvoke(
-                    {"messages": [create_chat_message(message)]},
+                    inputs,
                     config=config,
                 )
             response: Response = result["structured_response"]
-            await message.channel.send(response.content)
+            await message.channel.send(
+                content=response.content,
+                tts=response.tts,
+                embeds=response.embeds,
+                stickers=response.stickers,
+                suppress_embeds=response.suppress_embeds,
+                allowed_mentions=response.allowed_mentions,
+                silent=response.silent,
+            )
 
         except Exception as e:
             logger.error(f"Error handling message event: {str(e)}")
