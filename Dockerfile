@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM python:${PYTHON_VERSION}-slim-${DEBIAN_VERSION}
 
 # Add labels to the final image
-LABEL org.opencontainers.image.source="https://github.com/infinity-horizons/apeiron"
+LABEL org.opencontainers.image.source="https://github.com/shikanime-studio/apeiron"
 LABEL org.opencontainers.image.description="Apeiron AI"
 LABEL org.opencontainers.image.licenses="AGPL-3.0"
 

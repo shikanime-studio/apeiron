@@ -1,11 +1,9 @@
 import logging
 from pathlib import Path
-from typing import Literal
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.prebuilt import create_react_agent
-from pydantic import BaseModel, Field
 
 from apeiron.agents.utils import load_prompt
 
