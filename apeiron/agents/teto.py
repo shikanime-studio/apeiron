@@ -5,7 +5,6 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.prebuilt import create_react_agent
 
-from apeiron.agents.base import Response
 from apeiron.agents.utils import load_prompt
 
 logger = logging.getLogger(__name__)
@@ -28,7 +27,6 @@ def create_agent(**kwargs) -> BaseChatModel:
         prompt=load_prompt(
             Path(__file__).parent.resolve() / f"{Path(__file__).stem}.yaml",
         ),
-        response_format=Response,
         version="v2",
         **kwargs,
     )
