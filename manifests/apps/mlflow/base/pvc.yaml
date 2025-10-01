@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: mlflow-runs-data
-  namespace: infinity-horizons
+  namespace: shikanime-studio
 spec:
   accessModes:
     - ReadWriteOnce
@@ -17,7 +17,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: mlflow-artifacts-data
-  namespace: infinity-horizons
+  namespace: shikanime-studio
 spec:
   accessModes:
     - ReadWriteOnce
