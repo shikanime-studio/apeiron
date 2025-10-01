@@ -12,7 +12,7 @@ manifests:
     paths:
       - manifests/clusters/nishir/overlays/default
 profiles:
-  - name: development
+  - name: nishir-development
     activation:
       - kubeContext: minikube
       - command: dev
@@ -20,3 +20,8 @@ profiles:
       kustomize:
         paths:
           - manifests/clusters/nishir/overlays/development
+  - name: nishir-tailnet
+    manifests:
+      kustomize:
+        paths:
+          - manifests/clusters/nishir/overlays/tailnet
