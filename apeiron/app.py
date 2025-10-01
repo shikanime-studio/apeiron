@@ -10,7 +10,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import trim_messages
 from pydantic import BaseModel, Field
 
-import apeiron.logging
+import apeiron.instrumentation
 from apeiron.chat_message_histories.discord import DiscordChannelChatMessageHistory
 from apeiron.agents import create_agent
 from apeiron.chat_models import create_chat_model
@@ -170,5 +170,5 @@ def create_api(bot: Client):
 
 
 def create_app():
-    apeiron.logging.init()
+    apeiron.instrumentation.init()
     return create_api(create_bot())
