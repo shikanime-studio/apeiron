@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 
 import apeiron.logging
 from apeiron.chat_message_histories.discord import DiscordChannelChatMessageHistory
+from apeiron.agents import create_agent
 from apeiron.chat_models import create_chat_model
 from apeiron.store import create_store
 from apeiron.toolkits.discord.toolkit import DiscordToolkit
@@ -52,32 +53,7 @@ class Response(BaseModel):
     )
 
 
-def get_agent_module(agent_name: str):
-    """Import and return the create_agent function for the specified agent."""
-    try:
-        if agent_name == "operator_6o":
-            from apeiron.agents.operator_6o import create_agent
-        elif agent_name == "teto":
-            from apeiron.agents.teto import create_agent
-        elif agent_name == "roast":
-            from apeiron.agents.roast import create_agent
-        else:
-            raise ValueError(f"Unknown agent: {agent_name}")
-
-        return create_agent
-    except ImportError as e:
-        logger.error(f"Failed to import agent '{agent_name}': {e}")
-        raise ValueError(f"Agent '{agent_name}' is not available") from e
-
-
 def create_bot():
-    # Get the agent to use from environment variable
-    agent_name = os.getenv("APEIRON_AGENT", "operator_6o")
-    logger.info(f"Using agent: {agent_name}")
-
-    # Get the agent creation function
-    create_agent = get_agent_module(agent_name)
-
     # Initialize the MistralAI model
     chat_model = create_chat_model(
         model=os.getenv("APEIRON_MODEL", "mistralai:pixtral-large-2411")
@@ -89,8 +65,14 @@ def create_bot():
     # Initialize the Discord client
     bot = AutoShardedBot(intents=Intents.all())
     tools = DiscordToolkit(client=bot).get_tools()
+
+    # Create the agent using the new agents package function
     graph = create_agent(
-        tools=tools, model=chat_model, store=store, response_format=Response
+        agent=os.getenv("APEIRON_AGENT", "operator_6o"),
+        tools=tools,
+        model=chat_model,
+        store=store,
+        response_format=Response,
     )
 
     @bot.listen
