@@ -80,7 +80,7 @@ def create_bot():
         if is_bot_message(bot, message):
             return
 
-        if not is_bot_mentioned(bot, message) or not is_private_channel(message):
+        if not is_bot_mentioned(bot, message) and not is_private_channel(message):
             return
 
         try:
