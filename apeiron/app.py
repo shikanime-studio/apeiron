@@ -41,9 +41,6 @@ class Response(BaseModel):
     )
     embeds: list[dict] | None = Field(None, description="List of embed dictionaries")
     stickers: list[int] | None = Field(None, description="List of sticker IDs to send")
-    suppress_embeds: bool | None = Field(
-        None, description="Whether to suppress embeds in this message"
-    )
     allowed_mentions: dict | None = Field(
         None, description="Controls which mentions are allowed in the message"
     )
@@ -77,11 +74,10 @@ def create_bot():
 
     @bot.listen
     async def on_message(message: Message):
-        if (
-            is_bot_message(bot, message)
-            or not is_bot_mentioned(bot, message)
-            or not is_private_channel(message)
-        ):
+        if is_bot_message(bot, message):
+            return
+
+        if not is_bot_mentioned(bot, message) and not is_private_channel(message):
             return
 
         try:
@@ -90,7 +86,7 @@ def create_bot():
             inputs = {
                 "messages": trim_messages(
                     trim_messages_images(chat_history.messages, max_images=1),
-                    token_counter=model,
+                    token_counter=chat_model,
                     strategy="last",
                     max_tokens=2000,
                     start_on="human",
@@ -114,7 +110,6 @@ def create_bot():
                 tts=response.tts,
                 embeds=response.embeds,
                 stickers=response.stickers,
-                suppress_embeds=response.suppress_embeds,
                 allowed_mentions=response.allowed_mentions,
                 silent=response.silent,
             )

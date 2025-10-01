@@ -17,9 +17,6 @@ class SendMessageInput(BaseModel):
     embeds: list[dict] | None = Field(None, description="List of embed dictionaries")
     reference: int | None = Field(None, description="Message ID to reply to")
     stickers: list[int] | None = Field(None, description="List of sticker IDs to send")
-    suppress_embeds: bool = Field(
-        False, description="Whether to suppress embeds in this message"
-    )
     allowed_mentions: dict | None = Field(
         None, description="Controls which mentions are allowed in the message"
     )
@@ -40,7 +37,6 @@ def create_send_message_tool(client: Client):
         embeds: list[dict] | None = None,
         reference: int | None = None,
         stickers: list[int] | None = None,
-        suppress_embeds: bool = False,
         allowed_mentions: dict | None = None,
         silent: bool = False,
         config: RunnableConfig | None = None,
@@ -54,7 +50,6 @@ def create_send_message_tool(client: Client):
             embeds: List of embed dictionaries.
             reference: Message ID to reply to.
             stickers: List of sticker IDs to send.
-            suppress_embeds: Whether to suppress embeds in this message.
             allowed_mentions: Controls which mentions are allowed in the message.
             silent: Whether to send the message without triggering notifications.
             config: Optional runnable config object.
@@ -91,7 +86,6 @@ def create_send_message_tool(client: Client):
                 embeds=embed_objects,
                 reference=msg_reference,
                 stickers=stickers,
-                suppress_embeds=suppress_embeds,
                 allowed_mentions=allowed_mentions,
                 silent=silent,
             )
