@@ -91,6 +91,7 @@
               pkgs.kubectl
               pkgs.kustomize
               pkgs.skaffold
+              pkgs.sops
               pkgs.uv
               pkgs.yq
             ];
