@@ -17,19 +17,6 @@ spec:
       containers:
         - name: apeiron
           image: apeiron
-          env:
-            - name: DISCORD_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: apeiron
-                  key: discord_token
-            - name: LOG_FORMAT
-              value: uvicorn
-            - name: MISTRAL_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: apeiron
-                  key: mistral_api_key
           ports:
             - containerPort: 8000
               name: http

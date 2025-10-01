@@ -2,5 +2,12 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 components:
   - ../../components/mlflow
+patches:
+  - path: patch-sts.yaml
 resources:
   - ../../base
+secretGenerator:
+  - name: apeiron
+    namespace: shikanime-studio
+    envs:
+      - apeiron/.env
