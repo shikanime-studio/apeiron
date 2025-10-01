@@ -44,6 +44,7 @@
             projectRootFile = "flake.nix";
             enableDefaultExcludes = true;
             programs = {
+              dockfmt.enable = true;
               hclfmt.enable = true;
               nixfmt.enable = true;
               prettier.enable = true;
