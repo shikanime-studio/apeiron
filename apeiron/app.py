@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from langchain_core.runnables import RunnableConfig
 
 import apeiron.logging
-from apeiron.agents.operator_6o import Response, create_agent
+from apeiron.agents.operator_6o import create_agent, Response
 from apeiron.chat_models import create_chat_model
 from apeiron.store import create_store
 from apeiron.toolkits.discord.toolkit import DiscordToolkit
@@ -24,6 +24,32 @@ from apeiron.tools.discord.utils import (
 logger = logging.getLogger(__name__)
 
 
+class Response(BaseModel):
+    """Response format for agent interactions."""
+
+    content: str | None = Field(
+        None,
+        description="Content of the message to send or reply",
+        min_length=1,
+        max_length=2000,
+    )
+    tts: bool | None = Field(
+        None, description="Whether to send as text-to-speech message"
+    )
+    embeds: list[dict] | None = Field(None, description="List of embed dictionaries")
+    stickers: list[int] | None = Field(None, description="List of sticker IDs to send")
+    suppress_embeds: bool | None = Field(
+        None, description="Whether to suppress embeds in this message"
+    )
+    allowed_mentions: dict | None = Field(
+        None, description="Controls which mentions are allowed in the message"
+    )
+    silent: bool | None = Field(
+        None,
+        description="Whether to send the message without triggering notifications",
+    )
+
+
 def create_bot():
     # Initialize the MistralAI model
     chat_model = create_chat_model(
@@ -36,18 +62,17 @@ def create_bot():
     # Initialize the Discord client
     bot = AutoShardedBot(intents=Intents.all())
     tools = DiscordToolkit(client=bot).get_tools()
-    graph = create_agent(tools=tools, model=chat_model, store=store)
+    graph = create_agent(
+        tools=tools, model=chat_model, store=store, response_format=Response
+    )
 
-    # Discord message handler directly in create_app
     @bot.listen
     async def on_message(message: Message):
-        if is_bot_message(bot, message):
-            return
-
-        if not is_bot_mentioned(bot, message) and not is_private_channel(message):
-            logger.debug(
-                f"Message from {message.author.name} in {message.channel.name} "
-            )
+        if (
+            is_bot_message(bot, message)
+            or not is_bot_mentioned(bot, message)
+            or not is_private_channel(message)
+        ):
             return
 
         try:
@@ -62,16 +87,15 @@ def create_bot():
                     config=config,
                 )
             response: Response = result["structured_response"]
-
-            match response.type:
-                case "send":
-                    await message.channel.send(content=response.content)
-                case "reply":
-                    await message.reply(content=response.content)
-                case "noop":
-                    logger.debug("No action needed")
-                case _:
-                    logger.warning("Unknown response type: %s", response.type)
+            await message.channel.send(
+                content=response.content,
+                tts=response.tts,
+                embeds=response.embeds,
+                stickers=response.stickers,
+                suppress_embeds=response.suppress_embeds,
+                allowed_mentions=response.allowed_mentions,
+                silent=response.silent,
+            )
 
         except Exception as e:
             logger.error(f"Error handling message event: {str(e)}")
