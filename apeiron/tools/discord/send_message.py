@@ -23,12 +23,6 @@ class SendMessageInput(BaseModel):
     allowed_mentions: dict | None = Field(
         None, description="Controls which mentions are allowed in the message"
     )
-    components: list[dict] | None = Field(
-        None, description="Message components (buttons, select menus, etc.)"
-    )
-    thread_name: str | None = Field(
-        None, description="Creates a thread with this name from this message"
-    )
     silent: bool = Field(
         False,
         description="Whether to send the message without triggering notifications",
@@ -48,8 +42,6 @@ def create_send_message_tool(client: Client):
         stickers: list[int] | None = None,
         suppress_embeds: bool = False,
         allowed_mentions: dict | None = None,
-        components: list[dict] | None = None,
-        thread_name: str | None = None,
         silent: bool = False,
         config: RunnableConfig | None = None,
     ) -> str:
@@ -64,8 +56,6 @@ def create_send_message_tool(client: Client):
             stickers: List of sticker IDs to send.
             suppress_embeds: Whether to suppress embeds in this message.
             allowed_mentions: Controls which mentions are allowed in the message.
-            components: Message components (buttons, select menus, etc.).
-            thread_name: Creates a thread with this name from this message.
             silent: Whether to send the message without triggering notifications.
             config: Optional runnable config object.
 
@@ -103,13 +93,9 @@ def create_send_message_tool(client: Client):
                 stickers=stickers,
                 suppress_embeds=suppress_embeds,
                 allowed_mentions=allowed_mentions,
-                components=components,
                 silent=silent,
             )
 
-            # Create thread if name is provided
-            if thread_name and message:
-                await message.create_thread(name=thread_name)
             return f"Message sent successfully with ID: {message.id}"
         except (Forbidden, NotFound) as e:
             raise ToolException(f"Failed to send message: {str(e)}") from e
