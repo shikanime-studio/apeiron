@@ -1,7 +1,7 @@
 from discord import Client, Message, TextChannel
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.messages import BaseMessage
-from apeiron.tools.discord.get_message import to_dict
+from apeiron.tools.discord.utils import create_chat_message
 
 
 class DiscordChannelChatMessageHistory(BaseChatMessageHistory):
@@ -14,7 +14,7 @@ class DiscordChannelChatMessageHistory(BaseChatMessageHistory):
 
     def add_message(self, message: Message) -> None:
         """Add a Discord message to the store."""
-        self.messages.append(to_dict(message))
+        self.messages.append(create_chat_message(message))
 
     def clear(self) -> None:
         """Clear messages from the store."""
