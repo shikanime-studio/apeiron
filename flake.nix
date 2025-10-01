@@ -89,9 +89,10 @@
               pkgs.kubectl
               pkgs.kustomize
               pkgs.skaffold
+              pkgs.skopeo
               pkgs.sops
               pkgs.uv
-              pkgs.yq
+              pkgs.yq-go
             ];
           };
         };
