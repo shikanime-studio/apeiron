@@ -8,6 +8,9 @@ spec:
     spec:
       containers:
         - name: apeiron
+          env:
+            - name: APEIRON_AGENT
+              value: teto
           envFrom:
             - secretRef:
                 name: apeiron

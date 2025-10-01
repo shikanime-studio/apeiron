@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 import apeiron.logging
 from apeiron.chat_message_histories.discord import DiscordChannelChatMessageHistory
-from apeiron.agents.operator_6o import create_agent
+from apeiron.agents import create_agent
 from apeiron.chat_models import create_chat_model
 from apeiron.store import create_store
 from apeiron.toolkits.discord.toolkit import DiscordToolkit
@@ -65,8 +65,14 @@ def create_bot():
     # Initialize the Discord client
     bot = AutoShardedBot(intents=Intents.all())
     tools = DiscordToolkit(client=bot).get_tools()
+
+    # Create the agent using the new agents package function
     graph = create_agent(
-        tools=tools, model=chat_model, store=store, response_format=Response
+        agent=os.getenv("APEIRON_AGENT", "operator_6o"),
+        tools=tools,
+        model=chat_model,
+        store=store,
+        response_format=Response,
     )
 
     @bot.listen
