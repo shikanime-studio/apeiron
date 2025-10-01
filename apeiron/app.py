@@ -77,9 +77,10 @@ def create_bot():
 
     @bot.listen
     async def on_message(message: Message):
-        if not is_bot_message(bot, message) and (
-            not is_bot_mentioned(bot, message) or not is_private_channel(message)
-        ):
+        if is_bot_message(bot, message):
+            return
+
+        if not is_bot_mentioned(bot, message) or not is_private_channel(message):
             return
 
         try:
