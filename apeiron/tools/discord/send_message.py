@@ -1,4 +1,4 @@
-from discord import Client, Embed, File, MessageReference
+from discord import Client, Embed, MessageReference
 from discord.errors import Forbidden, NotFound
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
@@ -15,7 +15,6 @@ class SendMessageInput(BaseModel):
     )
     tts: bool = Field(False, description="Whether to send as text-to-speech message")
     embeds: list[dict] | None = Field(None, description="List of embed dictionaries")
-    files: list[str] | None = Field(None, description="List of file paths to send")
     reference: int | None = Field(None, description="Message ID to reply to")
     stickers: list[int] | None = Field(None, description="List of sticker IDs to send")
     suppress_embeds: bool = Field(
@@ -45,7 +44,6 @@ def create_send_message_tool(client: Client):
         channel_id: int | None = None,
         tts: bool = False,
         embeds: list[dict] | None = None,
-        files: list[str] | None = None,
         reference: int | None = None,
         stickers: list[int] | None = None,
         suppress_embeds: bool = False,
@@ -62,7 +60,6 @@ def create_send_message_tool(client: Client):
             channel_id: The ID of the channel to send the message to.
             tts: Whether to send as text-to-speech message.
             embeds: List of embed dictionaries.
-            files: List of file paths to send.
             reference: Message ID to reply to.
             stickers: List of sticker IDs to send.
             suppress_embeds: Whether to suppress embeds in this message.
@@ -85,9 +82,6 @@ def create_send_message_tool(client: Client):
             if not channel:
                 raise ToolException(f"Channel {channel_id} not found")
 
-            # Convert file paths to File objects
-            file_objects = [File(fp) for fp in (files or [])]
-
             # Convert embed dicts to Embed objects
             embed_objects = [Embed.from_dict(e) for e in (embeds or [])]
 
@@ -105,7 +99,6 @@ def create_send_message_tool(client: Client):
                 content=content,
                 tts=tts,
                 embeds=embed_objects,
-                files=file_objects,
                 reference=msg_reference,
                 stickers=stickers,
                 suppress_embeds=suppress_embeds,
