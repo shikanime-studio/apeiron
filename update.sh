@@ -1,23 +1,8 @@
-#!/usr/bin/env nix
-#! nix develop --impure --command bash
+#!/usr/bin/env bash
 
 set -o errexit
 set -o nounset
 set -o pipefail
-
-# Update gitignore
-gitnr create \
-  ghc:Nix \
-  gh:Python \
-  repo:shikanime/gitignore/refs/heads/main/Devenv.gitignore \
-  repo:shikanime/gitignore/refs/heads/main/MLflow.gitignore \
-  tt:jetbrains+all \
-  tt:linux \
-  tt:macos \
-  tt:terraform \
-  tt:vim \
-  tt:visualstudiocode \
-  tt:windows >.gitignore
 
 for app_dir in "$(dirname "$0")"/apps/* "$(dirname "$0")"/clusters/*; do
   # Update base directory

@@ -40,7 +40,7 @@
         treefmt-nix.flakeModule
       ];
       perSystem =
-        { config, pkgs, ... }:
+        { pkgs, ... }:
         let
           google-cloud-sdk = pkgs.google-cloud-sdk.withExtraComponents [
             pkgs.google-cloud-sdk.components.alpha
