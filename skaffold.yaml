@@ -4,7 +4,7 @@ metadata:
   name: apeiron
 build:
   artifacts:
-    - image: ghcr.io/shikanime-studio/apeiron
+    - image: ghcr.io/shikanime-studio/apeiron/apeiron
   local:
     useBuildkit: true
 manifests:
