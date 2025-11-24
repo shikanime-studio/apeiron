@@ -7,7 +7,7 @@ def format_message(message: Message) -> str:
     markdown_content = []
 
     # Message header
-    markdown_content.append(f"## Discord Message")
+    markdown_content.append("## Discord Message")
     markdown_content.append(f"**ID:** `{message.id}`")
     markdown_content.append(f"**Channel:** `{message.channel.id}`")
     if message.guild:
@@ -17,7 +17,7 @@ def format_message(message: Message) -> str:
         markdown_content.append(f"**Edited:** {message.edited_at}")
 
     # Author info
-    markdown_content.append(f"\n### Author")
+    markdown_content.append("\n### Author")
     markdown_content.append(f"**Name:** {message.author.name}")
     if message.author.display_name != message.author.name:
         markdown_content.append(f"**Display Name:** {message.author.display_name}")
@@ -29,7 +29,7 @@ def format_message(message: Message) -> str:
         )
     # Message content
     if message.content:
-        markdown_content.append(f"\n### Content")
+        markdown_content.append("\n### Content")
         markdown_content.append(f"```\n{message.content}\n```")
 
     # Attachments
@@ -55,7 +55,7 @@ def format_message(message: Message) -> str:
 
     # Referenced message
     if message.reference and message.reference.resolved:
-        markdown_content.append(f"\n### Reply To")
+        markdown_content.append("\n### Reply To")
         markdown_content.append(f"**Message ID:** `{message.reference.resolved.id}`")
         markdown_content.append(f"**Author:** {message.reference.resolved.author}")
         markdown_content.append(
