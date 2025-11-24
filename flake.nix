@@ -65,6 +65,7 @@
             };
             packages = [
               google-cloud-sdk
+              pkgs.docker
               pkgs.kubectl
               pkgs.kustomize
               pkgs.skaffold
