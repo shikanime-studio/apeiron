@@ -6,14 +6,15 @@ from contextlib import asynccontextmanager, suppress
 from discord import AutoShardedBot, Client, Intents, Message
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import trim_messages
+from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel, Field
 
 import apeiron.instrumentation
-from apeiron.chat_message_histories.discord import DiscordChannelChatMessageHistory
 from apeiron.agents import create_agent
+from apeiron.chat_message_histories.discord import DiscordChannelChatMessageHistory
 from apeiron.chat_models import create_chat_model
+from apeiron.messages.utils import trim_messages_images
 from apeiron.store import create_store
 from apeiron.toolkits.discord.toolkit import DiscordToolkit
 from apeiron.tools.discord.utils import (
@@ -22,7 +23,6 @@ from apeiron.tools.discord.utils import (
     is_bot_message,
     is_private_channel,
 )
-from apeiron.messages.utils import trim_messages_images
 
 logger = logging.getLogger(__name__)
 
