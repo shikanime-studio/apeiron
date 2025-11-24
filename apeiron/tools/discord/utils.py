@@ -62,9 +62,10 @@ def format_message(message: Message) -> str:
             f"**Timestamp:** {message.reference.resolved.created_at}"
         )
         if message.reference.resolved.content:
-            markdown_content.append(
-                f"**Content:** {message.reference.resolved.content[:100]}{'...' if len(message.reference.resolved.content) > 100 else ''}"
-            )
+            ref_content = message.reference.resolved.content
+            short = ref_content[:100]
+            suffix = "..." if len(ref_content) > 100 else ""
+            markdown_content.append(f"**Content:** {short}{suffix}")
     return "\n".join(markdown_content)
 
 
