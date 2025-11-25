@@ -7,6 +7,7 @@ from discord import AutoShardedBot, Client, Intents, Message
 from discord.ext import tasks
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import trim_messages
 from langchain_core.runnables import Runnable, RunnableConfig
 from pydantic import BaseModel, Field
@@ -41,7 +42,7 @@ class Result(BaseModel):
     )
 
 
-def create_message_handler(bot: Client, graph: Runnable, chat_model: ChatModel):
+def create_message_handler(bot: Client, graph: Runnable, chat_model: BaseChatModel):
     async def handle_message(message: Message):
         chat_history = DiscordChannelChatMessageHistory(bot)
         await chat_history.load_messages_from_message(message)
