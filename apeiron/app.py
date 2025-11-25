@@ -145,10 +145,6 @@ def create_api_lifespan(bot: Client):
 def create_api(bot: Client):
     app = FastAPI(lifespan=create_api_lifespan(bot))
 
-    @app.get("/healthz")
-    async def liveness_probe():
-        return {"status": "ok"}
-
     @app.get("/readyz")
     async def readiness_probe():
         if bot.is_ready():
