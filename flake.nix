@@ -72,7 +72,6 @@
               pkgs.skopeo
               pkgs.sops
               pkgs.uv
-              pkgs.yq-go
             ];
           };
         };
