@@ -23,7 +23,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 4Gi
+      storage: 512Mi
   storageClassName: nishir-standard
   volumeMode: Filesystem
   volumeName: mlflow-artifacts-data
