@@ -41,7 +41,7 @@ class Result(BaseModel):
     )
 
 
-def create_message_handler(bot: Client, graph: Runnable):
+def create_message_handler(bot: Client, graph: Runnable, chat_model: ChatModel):
     async def handle_message(message: Message):
         chat_history = DiscordChannelChatMessageHistory(bot)
         await chat_history.load_messages_from_message(message)
@@ -111,7 +111,11 @@ def create_bot():
         response_format=Result,
     )
 
-    handle_message = create_message_handler(bot, graph)
+    handle_message = create_message_handler(
+        bot=bot,
+        graph=graph,
+        chat_model=chat_model,
+    )
 
     @bot.listen
     async def on_message(message: Message):
