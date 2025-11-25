@@ -3,7 +3,7 @@ kind: Kustomization
 patches:
   - path: patch-sts.yaml
 resources:
-  - ../default
+  - ../nishir
 secretGenerator:
   - name: apeiron
     namespace: shikanime-studio
