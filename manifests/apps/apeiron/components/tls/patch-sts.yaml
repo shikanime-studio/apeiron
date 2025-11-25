@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: apeiron
+spec:
+  template:
+    spec:
+      containers:
+        - name: apeiron
+          env:
+            - name: UVICORN_SSL_CA_CERTS
+              value: /etc/ssl/certs/ca-certificates.crt
+            - name: UVICORN_SSL_CERTFILE
+              value: /etc/ssl/private/tls.crt
+            - name: UVICORN_SSL_KEYFILE
+              value: /etc/ssl/private/tls.key
+          volumeMounts:
+            - name: certs
+              mountPath: /etc/ssl/certs
+              readOnly: true
+            - name: tls
+              mountPath: /etc/ssl/private
+              readOnly: true
+      volumes:
+        - name: certs
+          configMap:
+            name: nishir-ca-certificates.crt
+        - name: tls
+          secret:
+            secretName: apeiron-tls
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
+                mode: 0640
