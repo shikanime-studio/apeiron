@@ -1,7 +1,6 @@
 from discord import Client, Message, TextChannel
-from itertools import groupby
 from langchain_core.chat_history import BaseChatMessageHistory
-from langchain_core.messages import BaseMessage, AIMessage
+from langchain_core.messages import AIMessage, BaseMessage
 
 from apeiron.tools.discord.utils import create_chat_message
 

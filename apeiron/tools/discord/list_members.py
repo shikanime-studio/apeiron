@@ -1,8 +1,9 @@
+from contextlib import suppress
+
 from discord import Client, Member
 from discord.errors import Forbidden, NotFound
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
-from langchain_core.tools.base import ToolException
 from pydantic import BaseModel, Field
 
 
@@ -66,7 +67,11 @@ def create_list_members_tool(client: Client):
         if guild_id is None and config:
             guild_id = config.get("configurable").get("guild_id")
         try:
-            guild = await client.fetch_guild(guild_id)
+            guild = None
+            with suppress(NotFound):
+                guild = await client.fetch_guild(guild_id)
+            if guild is None:
+                return f"Guild {guild_id} not found"
             kwargs = {"limit": limit}
             if before:
                 kwargs["before"] = before
@@ -76,6 +81,6 @@ def create_list_members_tool(client: Client):
             members = await guild.fetch_members(**kwargs).flatten()
             return [to_dict(member) for member in members]
         except (Forbidden, NotFound) as e:
-            raise ToolException(f"Failed to list members: {str(e)}") from e
+            return f"Failed to list members: {str(e)}"
 
     return list_members

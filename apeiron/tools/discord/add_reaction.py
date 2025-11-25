@@ -1,8 +1,10 @@
+from contextlib import suppress
+
 from discord import Client
 from discord.errors import Forbidden, NotFound
+from discord.message import Message
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
-from langchain_core.tools.base import ToolException
 from pydantic import BaseModel, Field
 
 
@@ -48,10 +50,15 @@ def create_add_reaction_tool(client: Client):
             channel_id = config.get("configurable").get("channel_id")
         try:
             channel = await client.fetch_channel(channel_id)
-            message = await channel.fetch_message(message_id)
-            await message.add_reaction(emoji)
-            return f"Reaction {emoji} added successfully to message {message_id}"
-        except (Forbidden, NotFound) as e:
-            raise ToolException(f"Failed to add reaction: {str(e)}") from e
+            target: Message | None = None
+            if message_id:
+                with suppress(NotFound):
+                    target = await channel.fetch_message(message_id)
+            if target is None:
+                return f"Message {message_id} not found"
+            await target.add_reaction(emoji)
+            return f"Reaction {emoji} added successfully to message {target.id}"
+        except Forbidden as e:
+            return f"Failed to add reaction: {str(e)}"
 
     return add_reaction

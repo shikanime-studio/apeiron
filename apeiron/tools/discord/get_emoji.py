@@ -1,8 +1,9 @@
+from contextlib import suppress
+
 from discord import Client, Emoji
 from discord.errors import Forbidden, NotFound
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
-from langchain_core.tools.base import ToolException
 from pydantic import BaseModel, Field
 
 
@@ -52,10 +53,18 @@ def create_get_emoji_tool(client: Client):
         if guild_id is None and config:
             guild_id = config.get("configurable").get("guild_id")
         try:
-            guild = await client.fetch_guild(guild_id)
-            emoji = await guild.fetch_emoji(emoji_id)
+            guild = None
+            with suppress(NotFound):
+                guild = await client.fetch_guild(guild_id)
+            if guild is None:
+                return f"Guild {guild_id} not found"
+            emoji = None
+            with suppress(NotFound):
+                emoji = await guild.fetch_emoji(emoji_id)
+            if emoji is None:
+                return f"Emoji {emoji_id} not found in guild {guild_id}"
             return to_dict(emoji)
-        except (Forbidden, NotFound) as e:
-            raise ToolException(f"Failed to get emoji: {str(e)}") from e
+        except Forbidden as e:
+            return f"Failed to get emoji: {str(e)}"
 
     return get_emoji

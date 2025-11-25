@@ -1,4 +1,7 @@
+from contextlib import suppress
+
 from discord import Client, TextChannel
+from discord.errors import Forbidden, NotFound
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
@@ -46,8 +49,15 @@ def create_list_channels_tool(client: Client):
         """
         if guild_id is None and config:
             guild_id = config.get("configurable").get("guild_id")
-        guild = await client.fetch_guild(guild_id)
-        channels = await guild.fetch_channels()
-        return [to_dict(channel) for channel in channels]
+        try:
+            guild = None
+            with suppress(NotFound):
+                guild = await client.fetch_guild(guild_id)
+            if guild is None:
+                return f"Guild {guild_id} not found"
+            channels = await guild.fetch_channels()
+            return [to_dict(channel) for channel in channels]
+        except (Forbidden, NotFound) as e:
+            return f"Failed to list channels: {str(e)}"
 
     return list_channels

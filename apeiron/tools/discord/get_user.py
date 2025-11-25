@@ -1,4 +1,7 @@
+from contextlib import suppress
+
 from discord import Client, User
+from discord.errors import Forbidden, NotFound
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
@@ -43,7 +46,14 @@ def create_get_user_tool(client: Client):
         """
         if user_id is None and config:
             user_id = config.get("configurable").get("user_id")
-        user = await client.fetch_user(user_id)
-        return to_dict(user)
+        try:
+            user = None
+            with suppress(NotFound):
+                user = await client.fetch_user(user_id)
+            if user is None:
+                return f"User {user_id} not found"
+            return to_dict(user)
+        except Forbidden as e:
+            return f"Failed to get user: {str(e)}"
 
     return get_user

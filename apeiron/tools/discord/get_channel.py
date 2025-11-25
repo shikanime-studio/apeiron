@@ -1,8 +1,9 @@
+from contextlib import suppress
+
 from discord import Client, TextChannel
 from discord.errors import Forbidden, NotFound
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
-from langchain_core.tools.base import ToolException
 from pydantic import BaseModel, Field
 
 from apeiron.tools.discord.list_channels import to_dict
@@ -39,13 +40,13 @@ def create_get_channel_tool(client: Client):
         if channel_id is None and config:
             channel_id = config.get("configurable").get("channel_id")
         try:
-            channel = await client.fetch_channel(channel_id)
+            channel = None
+            with suppress(NotFound):
+                channel = await client.fetch_channel(channel_id)
             if not isinstance(channel, TextChannel):
-                raise ToolException(
-                    f"Channel {channel_id} not found or not a text channel"
-                )
+                return f"Channel {channel_id} not found or not a text channel"
             return to_dict(channel)
-        except (Forbidden, NotFound) as e:
-            raise ToolException(f"Failed to get channel: {str(e)}") from e
+        except Forbidden as e:
+            return f"Failed to get channel: {str(e)}"
 
     return get_channel

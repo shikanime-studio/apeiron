@@ -73,24 +73,21 @@ def create_chat_message(message: Message) -> AIMessage | HumanMessage:
     """Create a message event as AIMessage or HumanMessage."""
     text = format_message(message)
 
-    content = []
+    segments: list[dict] = []
     for attachment in message.attachments:
         if attachment.content_type and attachment.content_type.startswith("image/"):
-            content.append(
+            segments.append(
                 {
                     "type": "image_url",
                     "image_url": attachment.url,
                 }
             )
-    if content:
-        content.append({"type": "text", "text": text})
-    else:
-        content = text
+    segments.append({"type": "text", "text": text})
 
     return (
-        AIMessage(content=content)
+        AIMessage(content=segments)
         if message.author.bot
-        else HumanMessage(content=content)
+        else HumanMessage(content=segments)
     )
 
 

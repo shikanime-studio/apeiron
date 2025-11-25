@@ -4,13 +4,13 @@ import os
 from contextlib import asynccontextmanager, suppress
 
 from discord import AutoShardedBot, Client, Intents, Message
-from discord.ext import tasks
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from langchain.agents.structured_output import ProviderStrategy
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import trim_messages
 from langchain_core.runnables import Runnable, RunnableConfig
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 import apeiron.instrumentation
 from apeiron.agents import create_agent
@@ -29,17 +29,8 @@ from apeiron.tools.discord.utils import (
 logger = logging.getLogger(__name__)
 
 
-class Result(BaseModel):
-    """Result format for agent interactions."""
-
-    requeue_after: int = Field(
-        0,
-        description="Number of seconds to wait before requeueing the message",
-    )
-    reason: str = Field(
-        "",
-        description="Reason for requeueing the message",
-    )
+class SendMessageAction(BaseModel):
+    content: str
 
 
 def create_message_handler(bot: Client, graph: Runnable, chat_model: BaseChatModel):
@@ -72,16 +63,10 @@ def create_message_handler(bot: Client, graph: Runnable, chat_model: BaseChatMod
                 config=config,
             )
 
-        structured: Result = invoked["structured_response"]
+            structured: SendMessageAction = invoked["structured_response"]
 
-        if structured.requeue_after:
-            loop = tasks.Loop(
-                lambda: handle_message(message),
-                seconds=float(structured.requeue_after),
-                count=1,
-                reconnect=True,
-            )
-            loop.start()
+            if isinstance(structured, SendMessageAction):
+                await message.channel.send(structured.content)
 
     return handle_message
 
@@ -89,7 +74,7 @@ def create_message_handler(bot: Client, graph: Runnable, chat_model: BaseChatMod
 def create_bot():
     # Initialize the MistralAI model
     chat_model = create_chat_model(
-        model=os.getenv("APEIRON_MODEL", "mistralai:pixtral-large-2411")
+        model=os.getenv("APEIRON_MODEL", "mistralai:ministral-3b-2410"),
     )
     store = create_store(
         model=os.getenv("APEIRON_EMBEDDING", "mistralai:mistral-embed"),
@@ -105,7 +90,7 @@ def create_bot():
         tools=tools,
         model=chat_model,
         store=store,
-        response_format=Result,
+        response_format=SendMessageAction,
     )
 
     handle_message = create_message_handler(

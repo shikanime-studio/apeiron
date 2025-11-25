@@ -1,8 +1,9 @@
+from contextlib import suppress
+
 from discord import Attachment, Client, Message, MessageReference, NotFound, User
 from discord.errors import Forbidden
 from langchain.tools import tool
 from langchain_core.runnables import RunnableConfig
-from langchain_core.tools.base import ToolException
 from pydantic import BaseModel, Field
 
 
@@ -106,20 +107,18 @@ def create_get_message_tool(client: Client):
         if not channel_id and config:
             channel_id = config.get("configurable").get("channel_id")
         try:
-            channel = await client.fetch_channel(channel_id)
+            channel = None
+            with suppress(NotFound):
+                channel = await client.fetch_channel(channel_id)
             if not channel:
-                raise ToolException(f"Channel {channel_id} not found")
-
-            message = await channel.fetch_message(message_id)
+                return f"Channel {channel_id} not found"
+            message = None
+            with suppress(NotFound):
+                message = await channel.fetch_message(message_id)
+            if not message:
+                return f"Message {message_id} not found in channel {channel_id}"
             return to_dict(message)
-
-        except NotFound as err:
-            raise ToolException(
-                f"Message {message_id} not found in channel {channel_id}"
-            ) from err
-        except Forbidden as err:
-            raise ToolException(
-                f"Cannot access message {message_id} in channel {channel_id}"
-            ) from err
+        except Forbidden:
+            return f"Cannot access message {message_id} in channel {channel_id}"
 
     return get_message

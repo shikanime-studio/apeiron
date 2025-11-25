@@ -18,11 +18,13 @@ def create_agent(agent: str, **kwargs):
     """
     try:
         if agent == "operator_6o":
-            from apeiron.agents.operator_6o import create_agent as _create_agent
+            from apeiron.agents.operator_6o import (
+                create_operation_60_agent as _create_agent,
+            )
         elif agent == "teto":
-            from apeiron.agents.teto import create_agent as _create_agent
+            from apeiron.agents.teto import create_teto_agent as _create_agent
         elif agent == "roast":
-            from apeiron.agents.roast import create_agent as _create_agent
+            from apeiron.agents.roast import create_roast_agent as _create_agent
         else:
             raise ValueError(f"Unknown agent: {agent}")
 

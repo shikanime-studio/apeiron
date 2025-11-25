@@ -1,8 +1,10 @@
 import logging
 import os
 
-import mlflow
+# TODO: Mlflow doesn't support Langchain 1.0
+# import mlflow
 import uvicorn
+from langchain_core.globals import set_debug
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +35,11 @@ def create_logging_handlers():
 
 
 def init():
+    # TODO: Mlflow doesn't support Langchain 1.0
     # Intrumentalise the langchain_core with mlflow
-    mlflow.langchain.autolog()
+    # mlflow.langchain.autolog()
+    if os.getenv("DEBUG", "false").lower() == "true":
+        set_debug(True)
 
     # Get log level from environment variable, default to INFO if not set
     logging.basicConfig(level=get_logging_level(), handlers=create_logging_handlers())

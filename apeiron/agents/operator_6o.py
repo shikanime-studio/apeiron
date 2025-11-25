@@ -1,16 +1,16 @@
 import logging
 from pathlib import Path
 
+from langchain.agents import create_agent
 from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.prebuilt import create_react_agent
 
 from apeiron.agents.utils import load_prompt
 
 logger = logging.getLogger(__name__)
 
 
-def create_agent(**kwargs) -> BaseChatModel:
+def create_operation_60_agent(**kwargs) -> BaseChatModel:
     """Create the Operator 6O agent for the graph.
 
     Args:
@@ -21,12 +21,11 @@ def create_agent(**kwargs) -> BaseChatModel:
     Returns:
         Configured chat model agent
     """
-    return create_react_agent(
+    return create_agent(
         name="Operator 6O",
         checkpointer=InMemorySaver(),
-        prompt=load_prompt(
+        system_prompt=load_prompt(
             Path(__file__).parent.resolve() / f"{Path(__file__).stem}.yaml",
         ),
-        version="v2",
         **kwargs,
     )

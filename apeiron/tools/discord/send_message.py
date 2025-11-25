@@ -1,8 +1,9 @@
+from contextlib import suppress
+
 from discord import Client, Embed, MessageReference
 from discord.errors import Forbidden, NotFound
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
-from langchain_core.tools.base import ToolException
 from pydantic import BaseModel, Field
 
 
@@ -46,13 +47,14 @@ def create_send_message_tool(client: Client):
         Args:
             content: The content of the message to send.
             channel_id: The ID of the channel to send the message to.
-            tts: Whether to send as text-to-speech message.
+            tts: Whether to send as text-to-speech message. Defaults to False.
             embeds: List of embed dictionaries.
             reference: Message ID to reply to.
             stickers: List of sticker IDs to send.
             allowed_mentions: Controls which mentions are allowed in the message.
             silent: Whether to send the message without triggering notifications.
-            config: Optional runnable config object.
+            Defaults to False.
+            config: Runnable config object.
 
         Returns:
             The ID of the sent message.
@@ -63,9 +65,11 @@ def create_send_message_tool(client: Client):
         if not channel_id and config:
             channel_id = config.get("configurable").get("channel_id")
         try:
-            channel = await client.fetch_channel(channel_id)
+            channel = None
+            with suppress(NotFound):
+                channel = await client.fetch_channel(channel_id)
             if not channel:
-                raise ToolException(f"Channel {channel_id} not found")
+                return f"Channel {channel_id} not found"
 
             # Convert embed dicts to Embed objects
             embed_objects = [Embed.from_dict(e) for e in (embeds or [])]
@@ -92,6 +96,6 @@ def create_send_message_tool(client: Client):
 
             return f"Message sent successfully with ID: {message.id}"
         except (Forbidden, NotFound) as e:
-            raise ToolException(f"Failed to send message: {str(e)}") from e
+            return f"Failed to send message: {str(e)}"
 
     return send_message

@@ -1,8 +1,9 @@
+from contextlib import suppress
+
 from discord import Client
 from discord.errors import Forbidden, NotFound
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
-from langchain_core.tools.base import ToolException
 from pydantic import BaseModel, Field
 
 from apeiron.tools.discord.get_message import to_dict
@@ -57,7 +58,11 @@ def create_list_messages_tool(client: Client):
         if channel_id is None and config:
             channel_id = config.get("configurable").get("channel_id")
         try:
-            channel = await client.fetch_channel(channel_id)
+            channel = None
+            with suppress(NotFound):
+                channel = await client.fetch_channel(channel_id)
+            if channel is None:
+                return f"Channel {channel_id} not found"
             kwargs = {"limit": limit}
             if before:
                 kwargs["before"] = before
@@ -71,6 +76,6 @@ def create_list_messages_tool(client: Client):
                 messages.append(to_dict(message))
             return messages
         except (Forbidden, NotFound) as e:
-            raise ToolException(f"Failed to read messages: {str(e)}") from e
+            return f"Failed to read messages: {str(e)}"
 
     return list_messages

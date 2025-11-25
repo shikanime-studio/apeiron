@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "click>=8.1.8",
+  "fastapi>=0.122.0",
   "langchain-core>=0.3.40",
   "langchain-google-genai>=2.1.0",
   "langchain-mistralai>=0.2.7",
@@ -13,7 +14,6 @@ dependencies = [
   "langgraph>=0.3.2",
   "langmem>=0.0.17",
   "mistral-common[sentencepiece]>=1.5.3",
-  "mlflow[langchain]>=2.20.3",
   "py-cord[speed,voice]>=2.6.1",
   "pydantic>=2.10.6",
   "pyyaml>=6.0.2",
