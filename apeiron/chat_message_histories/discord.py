@@ -1,6 +1,7 @@
 from discord import Client, Message, TextChannel
+from itertools import groupby
 from langchain_core.chat_history import BaseChatMessageHistory
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, AIMessage
 
 from apeiron.tools.discord.utils import create_chat_message
 
@@ -15,7 +16,39 @@ class DiscordChannelChatMessageHistory(BaseChatMessageHistory):
 
     def add_message(self, message: Message) -> None:
         """Add a Discord message to the store."""
-        self.messages.append(create_chat_message(message))
+        msg = create_chat_message(message)
+        if isinstance(msg, AIMessage):
+            self._add_ai_message(msg)
+        else:
+            self.messages.append(msg)
+
+    def _add_ai_message(self, message: AIMessage) -> None:
+        """Add an AI message to the store."""
+        if isinstance(self.messages[-1], AIMessage):
+            prev = self.messages[-1]
+            prev_content = (
+                [
+                    {"type": "text", "content": msg.content}
+                    if isinstance(msg, str)
+                    else msg
+                    for msg in prev.content
+                ]
+                if isinstance(prev.content, list)
+                else [{"type": "text", "content": prev.content}]
+            )
+            content = (
+                [
+                    {"type": "text", "content": msg.content}
+                    if isinstance(msg, str)
+                    else msg
+                    for msg in message.content
+                ]
+                if isinstance(message.content, list)
+                else [{"type": "text", "content": message.content}]
+            )
+            self.messages[-1] = AIMessage(content=prev_content + content)
+        else:
+            self.messages.append(message)
 
     def clear(self) -> None:
         """Clear messages from the store."""
