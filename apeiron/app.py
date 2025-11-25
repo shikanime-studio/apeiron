@@ -106,7 +106,7 @@ def create_bot():
         tools=tools,
         model=chat_model,
         store=store,
-        response_format=Response,
+        response_format=Result,
     )
 
     handle_message = create_message_handler(bot, graph)
