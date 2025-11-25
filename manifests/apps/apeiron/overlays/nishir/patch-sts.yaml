@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: apeiron
+spec:
+  template:
+    spec:
+      containers:
+        - name: apeiron
+          env:
+            - name: APEIRON_AGENT
+              value: teto
+          envFrom:
+            - secretRef:
+                name: apeiron
+      volumes:
+        - name: certs
+          configMap:
+            name: nishir-ca-certificates.crt
+        - name: tls
+          secret:
+            secretName: apeiron-tls
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
+                mode: 0640
