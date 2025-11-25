@@ -4,10 +4,11 @@ import os
 from contextlib import asynccontextmanager, suppress
 
 from discord import AutoShardedBot, Client, Intents, Message
+from discord.ext import tasks
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from langchain_core.messages import trim_messages
-from langchain_core.runnables import RunnableConfig
+from langchain_core.runnables import Runnable, RunnableConfig
 from pydantic import BaseModel, Field
 
 import apeiron.instrumentation
@@ -27,28 +28,64 @@ from apeiron.tools.discord.utils import (
 logger = logging.getLogger(__name__)
 
 
-class Response(BaseModel):
-    """Response format for agent interactions."""
+class Result(BaseModel):
+    """Result format for agent interactions."""
 
-    content: str | None = Field(
-        None,
-        description="Content of the message to send or reply",
-        min_length=1,
-        max_length=2000,
+    requeue: bool = Field(
+        False,
+        description="Whether to requeue the message for further processing",
     )
-    tts: bool | None = Field(
-        None, description="Whether to send as text-to-speech message"
-    )
-    embeds: list[dict] | None = Field(None, description="List of embed dictionaries")
-    stickers: list[int] | None = Field(None, description="List of sticker IDs to send")
-    allowed_mentions: dict | None = Field(
-        None, description="Controls which mentions are allowed in the message"
-    )
-    silent: bool | None = Field(
-        None,
-        description="Whether to send the message without triggering notifications",
+    requeue_after: int = Field(
+        0,
+        description="Number of seconds to wait before requeueing the message",
     )
 
+
+def create_message_handler(bot: Client, graph: Runnable):
+    async def handle_message(message: Message):
+        chat_history = DiscordChannelChatMessageHistory(bot)
+        await chat_history.load_messages_from_message(message)
+
+        inputs = {
+            "messages": trim_messages(
+                trim_messages_images(chat_history.messages, max_images=1),
+                token_counter=chat_model,
+                strategy="last",
+                max_tokens=2000,
+                start_on="human",
+                end_on=("human", "tool"),
+                include_system=True,
+            )
+        }
+
+        config: RunnableConfig = {
+            "configurable": create_configurable(message),
+        }
+
+        if message.guild:
+            config["configurable"]["guild_id"] = message.guild.id
+
+        async with message.channel.typing():
+            invoked = await graph.ainvoke(
+                inputs,
+                config=config,
+            )
+
+        structured: Result = invoked["structured_response"]
+
+        if structured.requeue:
+            loop = tasks.Loop(
+                lambda: handle_message(message), count=1, reconnect=True
+            )
+            loop.start()
+
+        if structured.requeue_after:
+            loop = tasks.Loop(
+                lambda: handle_message(message), seconds=float(structured.requeue_after), count=1, reconnect=True
+            )
+            loop.start()
+
+    return handle_message
 
 def create_bot():
     # Initialize the MistralAI model
@@ -72,48 +109,16 @@ def create_bot():
         response_format=Response,
     )
 
+    handle_message = create_message_handler(bot, graph)
+
     @bot.listen
     async def on_message(message: Message):
         if is_bot_message(bot, message):
             return
-
         if not is_bot_mentioned(bot, message) and not is_private_channel(message):
             return
-
         try:
-            chat_history = DiscordChannelChatMessageHistory(bot)
-            await chat_history.load_messages_from_message(message)
-            inputs = {
-                "messages": trim_messages(
-                    trim_messages_images(chat_history.messages, max_images=1),
-                    token_counter=chat_model,
-                    strategy="last",
-                    max_tokens=2000,
-                    start_on="human",
-                    end_on=("human", "tool"),
-                    include_system=True,
-                )
-            }
-            config: RunnableConfig = {
-                "configurable": create_configurable(message),
-            }
-            if message.guild:
-                config["configurable"]["guild_id"] = message.guild.id
-            async with message.channel.typing():
-                result = await graph.ainvoke(
-                    inputs,
-                    config=config,
-                )
-            response: Response = result["structured_response"]
-            await message.channel.send(
-                content=response.content,
-                tts=response.tts,
-                embeds=response.embeds,
-                stickers=response.stickers,
-                allowed_mentions=response.allowed_mentions,
-                silent=response.silent,
-            )
-
+            await handle_message(message)
         except Exception as e:
             logger.error(f"Error handling message event: {str(e)}")
 
