@@ -68,6 +68,7 @@
               pkgs.docker
               pkgs.kubectl
               pkgs.kustomize
+              pkgs.nushell
               pkgs.skaffold
               pkgs.skopeo
               pkgs.sops
