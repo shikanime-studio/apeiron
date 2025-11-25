@@ -31,13 +31,13 @@ logger = logging.getLogger(__name__)
 class Result(BaseModel):
     """Result format for agent interactions."""
 
-    requeue: bool = Field(
-        False,
-        description="Whether to requeue the message for further processing",
-    )
     requeue_after: int = Field(
         0,
         description="Number of seconds to wait before requeueing the message",
+    )
+    reason: str = Field(
+        "",
+        description="Reason for requeueing the message",
     )
 
 
@@ -72,10 +72,6 @@ def create_message_handler(bot: Client, graph: Runnable, chat_model: ChatModel):
             )
 
         structured: Result = invoked["structured_response"]
-
-        if structured.requeue:
-            loop = tasks.Loop(lambda: handle_message(message), count=1, reconnect=True)
-            loop.start()
 
         if structured.requeue_after:
             loop = tasks.Loop(
