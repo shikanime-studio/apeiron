@@ -65,10 +65,11 @@ def create_message_handler(bot: Client, graph: Runnable):
         if message.guild:
             config["configurable"]["guild_id"] = message.guild.id
 
-        stream = graph.stream(inputs, config=config)
         async with message.channel.typing():
-            for _ in stream():
-                pass
+            invoked = await graph.ainvoke(
+                inputs,
+                config=config,
+            )
 
         structured: Result = invoked["structured_response"]
 
