@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch: Apeiron",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "--factory",
+        "apeiron.app:create_app",
+        "--reload",
+      ],
+      "console": "internalConsole"
+    }
+  ]
+}
