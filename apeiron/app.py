@@ -65,27 +65,26 @@ def create_message_handler(bot: Client, graph: Runnable):
         if message.guild:
             config["configurable"]["guild_id"] = message.guild.id
 
-        async with message.channel.typing():
-            invoked = await graph.ainvoke(
-                inputs,
-                config=config,
-            )
+        for _ in graph.stream(inputs, config=config):
+            message.channel.typing()
 
         structured: Result = invoked["structured_response"]
 
         if structured.requeue:
-            loop = tasks.Loop(
-                lambda: handle_message(message), count=1, reconnect=True
-            )
+            loop = tasks.Loop(lambda: handle_message(message), count=1, reconnect=True)
             loop.start()
 
         if structured.requeue_after:
             loop = tasks.Loop(
-                lambda: handle_message(message), seconds=float(structured.requeue_after), count=1, reconnect=True
+                lambda: handle_message(message),
+                seconds=float(structured.requeue_after),
+                count=1,
+                reconnect=True,
             )
             loop.start()
 
     return handle_message
+
 
 def create_bot():
     # Initialize the MistralAI model
